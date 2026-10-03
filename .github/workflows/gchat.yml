@@ -1,1 +1,24 @@
+name: GCHAT
 
+on:
+  push:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enviar Commit Google Chat
+        env:
+          URL_GOOGLE_CHAT: ${{ secrets.GOOGLE_CHAT_URL }}
+          ORG: ${{ github.repository_owner }}
+          REPO: ${{ github.repository }}
+          MSG: ${{ github.event.head_commit.message }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          URL=$(printf '%s' "$URL_GOOGLE_CHAT" | tr -d '[:space:]"')
+          TEXT=$(printf 'Organização onde ocorreu o commit: *%s*\n\nCommit no repositório: *%s*\n\nMensagem do commit: *%s*\n\nAutor: *%s*' "$ORG" "$REPO" "$MSG" "$ACTOR")
+          jq -n --arg text "$TEXT" '{text: $text}' \
+          | curl -fsS -X POST "$URL" \
+              -H "Content-Type: application/json" \
+              -d @-

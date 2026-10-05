@@ -2,14 +2,14 @@ name: GCHAT
 
 on:
   pull_request:
-    types: opened
+    types: [opened]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Enviar Commit Google Chat
+      - name: Enviar Aviso PR Para Google Chat
         env:
           URL_GOOGLE_CHAT: ${{ secrets.GOOGLE_CHAT_URL }}
           ORG: ${{ github.repository_owner }}
@@ -19,7 +19,7 @@ jobs:
           ACTOR: ${{ github.event.pull_request.user.login }}
         run: |
           URL=$(printf '%s' "$URL_GOOGLE_CHAT" | tr -d '[:space:]"')
-          TEXT=$(printf 'Organização onde ocorreu o commit: *%s*\n\nCommit no repositório: *%s*\n\nBranch: *%s*\n\nMensagem do commit: *%s*\n\nAutor: *%s*' "$ORG" "$REPO" "$BRANCH" "$MSG" "$ACTOR")
+          TEXT=$(printf 'Organização onde o PR foi aberto: *%s*\n\nRepositório: *%s*\n\nTítulo do PR: *%s*\n\nAutor: *%s*' "$ORG" "$REPO" "$BRANCH" "$MSG" "$ACTOR")
           jq -n --arg text "$TEXT" '{text: $text}' \
           | curl -fsS -X POST "$URL" \
               -H "Content-Type: application/json" \

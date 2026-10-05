@@ -1,7 +1,8 @@
 name: GCHAT
 
 on:
-  push:
+  pull_request:
+    types: opened
 
 jobs:
   notify:
@@ -13,11 +14,12 @@ jobs:
           URL_GOOGLE_CHAT: ${{ secrets.GOOGLE_CHAT_URL }}
           ORG: ${{ github.repository_owner }}
           REPO: ${{ github.repository }}
-          MSG: ${{ github.event.head_commit.message }}
-          ACTOR: ${{ github.actor }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          MSG: ${{ github.event.pull_request.title }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
         run: |
           URL=$(printf '%s' "$URL_GOOGLE_CHAT" | tr -d '[:space:]"')
-          TEXT=$(printf 'Organização onde ocorreu o commit: *%s*\n\nCommit no repositório: *%s*\n\nMensagem do commit: *%s*\n\nAutor: *%s*' "$ORG" "$REPO" "$MSG" "$ACTOR")
+          TEXT=$(printf 'Organização onde ocorreu o commit: *%s*\n\nCommit no repositório: *%s*\n\nBranch: *%s*\n\nMensagem do commit: *%s*\n\nAutor: *%s*' "$ORG" "$REPO" "$BRANCH" "$MSG" "$ACTOR")
           jq -n --arg text "$TEXT" '{text: $text}' \
           | curl -fsS -X POST "$URL" \
               -H "Content-Type: application/json" \

@@ -1,0 +1,29 @@
+name: GCHAT
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enviar Aviso PR Para Google Chat
+        env:
+          URL_GOOGLE_CHAT: ${{ secrets.GOOGLE_CHAT_URL }}
+          ORG: ${{ github.repository_owner }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          MSG: ${{ github.event.pull_request.title }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          URL=$(printf '%s' "$URL_GOOGLE_CHAT" | tr -d '[:space:]"')
+
+          TEXT=$(printf 'Organização onde o PR foi aberto: *%s*\n\nRepositório: *%s*\n\nBranch: *%s*\n\nTítulo do PR: *%s*\n\nAutor: *%s*' \
+            "$ORG" "$REPO" "$BRANCH" "$MSG" "$ACTOR")
+
+          jq -n --arg text "$TEXT" '{text: $text}' \
+          | curl -fsS -X POST "$URL" \
+              -H "Content-Type: application/json" \
+              -d @-
